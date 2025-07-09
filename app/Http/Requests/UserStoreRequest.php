@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+
+class UserStoreRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|string|min:6|confirmed',
+            'phone' => 'nullable|numeric|digits:10',
+            'enabled' => 'boolean',
+            'role' => 'required|exists:roles,id',
+        ];
+    }
+
+    public function failedValidation(Validator $validator)
+
+    {
+        throw new HttpResponseException(response()->json([
+            'success'   => false,
+            'message'   => 'Validation errors',
+            'data'      => $validator->errors()
+        ]));
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser una cadena de texto.',
+            'name.max' => 'El nombre no debe exceder 255 caracteres.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
+            'email.unique' => 'El correo electrónico ya está registrado.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.string' => 'La contraseña debe ser una cadena de texto.',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
+            'phone.numeric' => 'El teléfono debe ser numérico.',
+            'phone.digits' => 'El teléfono debe tener exactamente 10 dígitos.',
+            'enabled.boolean' => 'El campo habilitado debe ser verdadero o falso.',
+            'role.required' => 'El rol es obligatorio.',
+            'role.exists' => 'El rol seleccionado no existe.',
+        ];
+    }
+}

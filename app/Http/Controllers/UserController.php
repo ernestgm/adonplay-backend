@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserStoreRequest;
+use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -52,20 +55,14 @@ class UserController extends Controller
     }
 
     // Crear un nuevo usuario
-    public function store(Request $request)
+    public function store(UserStoreRequest $request): JsonResponse
     {
         // Validación de los datos del usuario
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-            'phone' => 'required|numeric|digits:10',
-            'enabled' => 'boolean',
-            'role' => 'required|exists:roles,id',
-        ]);
+        $request->validated();
+        $input = $request->all();
 
-        $validated['password'] = Hash::make($validated['password']);
-        $user = User::create($validated);
+        $input['password'] = Hash::make($input['password']);
+        $user = User::create($input);
 
         // Asignar rol
         $user->roles()->sync([$request->role]);
@@ -76,28 +73,22 @@ class UserController extends Controller
     }
 
     // Actualizar un usuario existente
-    public function update(Request $request, $id)
+    public function update(UserUpdateRequest $request, $id): JsonResponse
     {
         $user = User::find($id);
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $id,
-            'password' => 'sometimes|string|min:6|confirmed',
-            'phone' => 'sometimes|numeric|digits:10',
-            'enabled' => 'boolean',
-            'role' => 'sometimes|exists:roles,id',
-        ]);
+        $request->validated();
 
 
-        if (isset($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
+        $input = $request->all();
+        if (isset($input['password'])) {
+            $input['password'] = Hash::make($input['password']);
         }
 
-        $user->update($validated);
+        $user->update($input);
 
         // Actualizar rol si viene en el request
         if ($request->filled('role')) {
