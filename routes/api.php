@@ -5,6 +5,10 @@
 use App\Http\Controllers\LoginCodeController;
 use App\Http\Controllers\UserController;
 //use App\Http\Controllers\QrAuthController;
+use App\Http\Controllers\BusinessController;
+use App\Http\Controllers\SlideController;
+use App\Http\Controllers\MediaController;
+use App\Http\Controllers\DeviceInfoController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -18,6 +22,8 @@ Route::prefix('v1')->group(function () {
         Route::post('login-code/generate', 'generate');
         Route::post('login-code/login', 'login');
     });
+    // DeviceInfo public create
+    Route::post('device-infos', [DeviceInfoController::class, 'store']);
 });
 
 //Private Routes
@@ -36,6 +42,61 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::controller(LoginCodeController::class)->group(function () {
             Route::post('login-code/confirm', 'confirmCode');
         });
+        // Business management routes
+        Route::controller(BusinessController::class)->group(function () {
+            Route::get('businesses', 'index'); // negocios del usuario
+            Route::get('businesses/all', 'all'); // todos los negocios (admin)
+            Route::post('businesses', 'store');
+            Route::get('businesses/{id}', 'show');
+            Route::put('businesses/{id}', 'update');
+            Route::delete('businesses/{id}', 'destroy');
+        });
+        // Slide management routes
+        Route::controller(SlideController::class)->group(function () {
+            Route::get('businesses/{businessId}/slides', 'index');
+            Route::post('businesses/{businessId}/slides', 'store');
+            Route::get('businesses/{businessId}/slides/{id}', 'show');
+            Route::put('businesses/{businessId}/slides/{id}', 'update');
+            Route::delete('businesses/{businessId}/slides/{id}', 'destroy');
+        });
+        // Media management routes
+        Route::controller(MediaController::class)->group(function () {
+            Route::get('slides/{slideId}/media', 'index');
+            Route::post('slides/{slideId}/media', 'store');
+            Route::get('slides/{slideId}/media/{id}', 'show');
+            Route::post('slides/{slideId}/media/{id}', 'update');
+            Route::delete('slides/{slideId}/media/{id}', 'destroy');
+        });
+        // Marquee management routes
+        Route::controller(\App\Http\Controllers\MarqueeController::class)->group(function () {
+            Route::get('marquees', 'index');
+            Route::post('marquees', 'store');
+            Route::get('marquees/{id}', 'show');
+            Route::put('marquees/{id}', 'update');
+            Route::delete('marquees/{id}', 'destroy');
+        });
+        // Qr management routes
+        Route::controller(\App\Http\Controllers\QrController::class)->group(function () {
+            Route::get('qrs', 'index');
+            Route::post('qrs', 'store');
+            Route::get('qrs/{id}', 'show');
+            Route::put('qrs/{id}', 'update');
+            Route::delete('qrs/{id}', 'destroy');
+        });
+        // Device management routes
+        Route::controller(\App\Http\Controllers\DeviceController::class)->group(function () {
+            Route::get('devices', 'index');
+            Route::post('devices', 'store');
+            Route::get('devices/{id}', 'show');
+            Route::put('devices/{id}', 'update');
+            Route::delete('devices/{id}', 'destroy');
+        });
+        // DeviceInfo private routes
+        Route::controller(DeviceInfoController::class)->group(function () {
+            Route::get('device-infos', 'index');
+            Route::get('device-infos/{id}', 'show');
+            Route::put('device-infos/{id}', 'update');
+            Route::delete('device-infos/{id}', 'destroy');
+        });
     });
 });
-
