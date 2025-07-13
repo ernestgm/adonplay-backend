@@ -8,7 +8,9 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -104,14 +106,27 @@ class UserController extends Controller
         return response()->json($user);
     }
 
-    // Eliminar un usuario
-    public function destroy($id)
+    // Eliminar uno o más usuarios
+    public function destroy(Request $request): JsonResponse
     {
-        $user = User::find($id);
-        if (!$user) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        $ids = $request->input('ids'); // array of IDs to delete
+
+        // validate input
+        $validator = Validator::make(['ids' => $ids], [
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], app('VALIDATION_STATUS'));
         }
-        $user->delete();
-        return response()->json(['message' => 'Usuario eliminado']);
+
+        // delete records
+        $deleted = DB::table('users')->whereIn('id', $ids)->delete();
+
+        return response()->json([
+                'success' => true,
+                'message' => "$deleted record(s) deleted."
+            ]
+        );
     }
 }

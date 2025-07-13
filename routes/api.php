@@ -36,7 +36,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/user/{id}', 'show');
             Route::post('/users', 'store');
             Route::put('/user/{id}', 'update');
-            Route::delete('/user/{id}', 'destroy');
+            Route::delete('/users', 'destroy');
         });
         // Login code routes
         Route::controller(LoginCodeController::class)->group(function () {
