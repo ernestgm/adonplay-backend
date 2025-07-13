@@ -18,7 +18,7 @@ class UserUpdateRequest extends FormRequest
         return [
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $this->route('id'),
-            'password' => 'sometimes|string|min:6|confirmed',
+            'password' => 'string|min:6|confirmed',
             'phone' => 'nullable|numeric|digits:10',
             'enabled' => 'boolean',
             'role' => 'sometimes|exists:roles,id',

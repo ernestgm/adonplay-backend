@@ -82,10 +82,14 @@ class UserController extends Controller
 
         $request->validated();
 
-
         $input = $request->all();
+        // Si la contraseña viene vacía o nula, no se actualiza
         if (isset($input['password'])) {
-            $input['password'] = Hash::make($input['password']);
+            if ($input['password'] === '' || $input['password'] === null) {
+                unset($input['password']);
+            } else {
+                $input['password'] = Hash::make($input['password']);
+            }
         }
 
         $user->update($input);
