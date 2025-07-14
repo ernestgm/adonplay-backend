@@ -42,14 +42,25 @@ class UserController extends Controller
 
     public function index()
     {
-        $authUserId = Auth::id();
-        $users = User::with('roles')->where('id', '!=', $authUserId)->get();
+        $users = [];
+        $authUser = Auth::user();
+        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        if ($isAdmin) {
+            // Admin puede ver todos menos él mismo
+            $users = User::with('roles')->where('id', '!=', $authUser->id)->get();
+        }
+
         return response()->json($users);
     }
 
     // Mostrar un usuario específico
     public function show($id)
     {
+        $authUser = Auth::user();
+        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        if (!$isAdmin && $authUser->id != $id) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
         $user = User::with('roles')->find($id);
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
@@ -60,33 +71,36 @@ class UserController extends Controller
     // Crear un nuevo usuario
     public function store(UserStoreRequest $request): JsonResponse
     {
+        $authUser = Auth::user();
+        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        if (!$isAdmin) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
         // Validación de los datos del usuario
         $request->validated();
         $input = $request->all();
-
         $input['password'] = Hash::make($input['password']);
         $user = User::create($input);
-
-        // Asignar rol
         $user->roles()->sync([$request->role]);
         $user->load('roles');
         $user->role = $user->roles->first() ? $user->roles->first()->name : null;
-
         return response()->json($user, 201);
     }
 
     // Actualizar un usuario existente
     public function update(UserUpdateRequest $request, $id): JsonResponse
     {
+        $authUser = Auth::user();
+        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        if (!$isAdmin && $authUser->id != $id) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
         $user = User::find($id);
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
-
         $request->validated();
-
         $input = $request->all();
-        // Si la contraseña viene vacía o nula, no se actualiza
         if (isset($input['password'])) {
             if ($input['password'] === '' || $input['password'] === null) {
                 unset($input['password']);
@@ -94,25 +108,24 @@ class UserController extends Controller
                 $input['password'] = Hash::make($input['password']);
             }
         }
-
         $user->update($input);
-
-        // Actualizar rol si viene en el request
         if ($request->filled('role')) {
             $user->roles()->sync([$request->role]);
         }
         $user->load('roles');
         $user->role = $user->roles->first() ? $user->roles->first()->name : null;
-
         return response()->json($user);
     }
 
     // Eliminar uno o más usuarios
     public function destroy(Request $request): JsonResponse
     {
-        $ids = $request->input('ids'); // array of IDs to delete
-
-        // validate input
+        $authUser = Auth::user();
+        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        if (!$isAdmin) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+        $ids = $request->input('ids');
         $validator = Validator::make(['ids' => $ids], [
             'ids' => 'required|array',
             'ids.*' => 'required|integer',
@@ -120,10 +133,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], app('VALIDATION_STATUS'));
         }
-
-        // delete records
         $deleted = DB::table('users')->whereIn('id', $ids)->delete();
-
         return response()->json([
                 'success' => true,
                 'message' => "$deleted record(s) deleted."
