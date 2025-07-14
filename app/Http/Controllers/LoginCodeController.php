@@ -66,6 +66,7 @@ class LoginCodeController extends Controller
     {
         $request->validate([
             'code' => 'required|string|size:8',
+            'user_id' => 'required',
         ]);
 
         $loginCode = LoginCode::where('code', $request->code)
@@ -76,7 +77,7 @@ class LoginCodeController extends Controller
             return response()->json(['message' => 'Código inválido, expirado o ya confirmado'], 400);
         }
 
-        $loginCode->user_id = Auth::user()->id;
+        $loginCode->user_id = $request->user_id;
         $loginCode->save();
 
         return response()->json(['message' => 'Código confirmado']);
