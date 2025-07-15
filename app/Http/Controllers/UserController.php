@@ -44,7 +44,7 @@ class UserController extends Controller
     {
         $users = [];
         $authUser = Auth::user();
-        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        $isAdmin = $this->isAdmin($authUser);
         if ($isAdmin) {
             // Admin puede ver todos menos él mismo
             $users = User::with('roles')->where('id', '!=', $authUser->id)->get();
@@ -57,7 +57,7 @@ class UserController extends Controller
     public function show($id)
     {
         $authUser = Auth::user();
-        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        $isAdmin = $this->isAdmin($authUser);
         if (!$isAdmin && $authUser->id != $id) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
@@ -72,7 +72,7 @@ class UserController extends Controller
     public function store(UserStoreRequest $request): JsonResponse
     {
         $authUser = Auth::user();
-        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        $isAdmin = $this->isAdmin($authUser);
         if (!$isAdmin) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
@@ -91,7 +91,7 @@ class UserController extends Controller
     public function update(UserUpdateRequest $request, $id): JsonResponse
     {
         $authUser = Auth::user();
-        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        $isAdmin = $this->isAdmin($authUser);
         if (!$isAdmin && $authUser->id != $id) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
@@ -121,7 +121,7 @@ class UserController extends Controller
     public function destroy(Request $request): JsonResponse
     {
         $authUser = Auth::user();
-        $isAdmin = $authUser->roles()->where('code', 'admin')->exists();
+        $isAdmin = $this->isAdmin($authUser);
         if (!$isAdmin) {
             return response()->json(['message' => 'No autorizado'], 403);
         }

@@ -13,7 +13,7 @@ class QrController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if ($user->roles()->where('code', 'admin')->exists()) {
+        if ($this->isAdmin($user)) {
             return response()->json(Qr::all());
         }
         return response()->json($user->qrs);
@@ -32,7 +32,7 @@ class QrController extends Controller
     {
         $user = Auth::user();
         $qr = Qr::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $qr->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $qr->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         return response()->json($qr);
@@ -43,7 +43,7 @@ class QrController extends Controller
     {
         $user = Auth::user();
         $qr = Qr::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $qr->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $qr->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $qr->update($request->validated());
@@ -55,7 +55,7 @@ class QrController extends Controller
     {
         $user = Auth::user();
         $qr = Qr::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $qr->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $qr->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $qr->delete();

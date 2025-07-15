@@ -14,7 +14,7 @@ class MarqueeController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if ($user->roles()->where('code', 'admin')->exists()) {
+        if ($this->isAdmin($user)) {
             return response()->json(Marquee::all());
         }
         return response()->json($user->marquees);
@@ -33,7 +33,7 @@ class MarqueeController extends Controller
     {
         $user = Auth::user();
         $marquee = Marquee::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $marquee->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $marquee->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         return response()->json($marquee);
@@ -44,7 +44,7 @@ class MarqueeController extends Controller
     {
         $user = Auth::user();
         $marquee = Marquee::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $marquee->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $marquee->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $marquee->update($request->validated());
@@ -56,7 +56,7 @@ class MarqueeController extends Controller
     {
         $user = Auth::user();
         $marquee = Marquee::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $marquee->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $marquee->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $marquee->delete();

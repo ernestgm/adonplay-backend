@@ -20,7 +20,7 @@ class MediaController extends Controller
         $user = Auth::user();
         $slide = Slide::findOrFail($slideId);
         $business = $slide->business;
-        if (!$user->roles()->where('code', 'admin')->exists() && $business->owner_id !== $user->id) {
+        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         return response()->json($slide->medias);
@@ -32,7 +32,7 @@ class MediaController extends Controller
         $user = Auth::user();
         $slide = Slide::findOrFail($slideId);
         $business = $slide->business;
-        if (!$user->roles()->where('code', 'admin')->exists() && $business->owner_id !== $user->id) {
+        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $type = $request->input('type');
@@ -62,7 +62,7 @@ class MediaController extends Controller
         $user = Auth::user();
         $slide = Slide::findOrFail($slideId);
         $business = $slide->business;
-        if (!$user->roles()->where('code', 'admin')->exists() && $business->owner_id !== $user->id) {
+        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $media = $slide->medias()->findOrFail($id);
@@ -75,7 +75,7 @@ class MediaController extends Controller
         $user = Auth::user();
         $slide = Slide::findOrFail($slideId);
         $business = $slide->business;
-        if (!$user->roles()->where('code', 'admin')->exists() && $business->owner_id !== $user->id) {
+        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $media = $slide->medias()->findOrFail($id);
@@ -106,7 +106,7 @@ class MediaController extends Controller
         $user = Auth::user();
         $slide = Slide::findOrFail($slideId);
         $business = $slide->business;
-        if (!$user->roles()->where('code', 'admin')->exists() && $business->owner_id !== $user->id) {
+        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $media = $slide->medias()->findOrFail($id);
@@ -121,4 +121,3 @@ class MediaController extends Controller
         return response()->json(['message' => 'Archivo multimedia eliminado']);
     }
 }
-

@@ -14,7 +14,7 @@ class DeviceController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if ($user->roles()->where('code', 'admin')->exists()) {
+        if ($this->isAdmin($user)) {
             return response()->json(Device::all());
         }
         return response()->json(Device::where('user_id', $user->id)->get());
@@ -35,7 +35,7 @@ class DeviceController extends Controller
     {
         $user = Auth::user();
         $device = Device::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $device->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $device->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         return response()->json($device);
@@ -46,7 +46,7 @@ class DeviceController extends Controller
     {
         $user = Auth::user();
         $device = Device::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $device->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $device->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $device->update($request->validated());
@@ -58,7 +58,7 @@ class DeviceController extends Controller
     {
         $user = Auth::user();
         $device = Device::findOrFail($id);
-        if (!$user->roles()->where('code', 'admin')->exists() && $device->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $device->user_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         // Eliminar DeviceInfo asociado por device_id

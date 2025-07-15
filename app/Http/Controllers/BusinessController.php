@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreBusinessRequest;
 use App\Http\Requests\UpdateBusinessRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class BusinessController extends Controller
 {
@@ -15,27 +17,28 @@ class BusinessController extends Controller
     {
         $user = Auth::user();
         // Solo negocios del usuario autenticado
-        if (!$user->roles()->where('code', 'admin')->exists()) {
-            return response()->json($user->businesses);
+        if (!$this->isAdmin($user)) {
+            $businesses = Business::where('owner_id', $user->id)->with('owner')->get();
+            return response()->json($businesses);
         }
         // Si es admin, listar todos los negocios
-        return response()->json(Business::all());
+        return response()->json(Business::with('owner')->get());
     }
 
     // Crear un nuevo negocio, permitiendo asignar owner si es admin
     public function store(StoreBusinessRequest $request)
     {
         $user = Auth::user();
-        $validated = $request->validated();
-        if ($user->roles()->where('code', 'admin')->exists() && isset($validated['owner_id'])) {
-            $ownerId = $validated['owner_id'];
-        } else {
-            $ownerId = $user->id;
+        // Solo admin puede crear negocios con owner_id diferente al suyo
+        if (!$this->isAdmin($user)) {
+            return response()->json(['message' => 'No autorizado'], 403);
         }
+
+        $validated = $request->validated();
         $business = Business::create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'owner_id' => $ownerId,
+            'owner_id' => $validated['owner_id'],
         ]);
         return response()->json($business, 201);
     }
@@ -46,7 +49,7 @@ class BusinessController extends Controller
         $user = Auth::user();
         $business = Business::findOrFail($id);
         // Solo el owner o admin puede ver el negocio
-        if (!$user->roles()->where('code', 'admin')->exists() && $business->owner_id !== $user->id) {
+        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         return response()->json($business);
@@ -58,7 +61,7 @@ class BusinessController extends Controller
         $user = Auth::user();
         $business = Business::findOrFail($id);
         // Solo el owner o admin puede actualizar el negocio
-        if (!$user->roles()->where('code', 'admin')->exists() && $business->owner_id !== $user->id) {
+        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $validated = $request->validated();
@@ -70,15 +73,26 @@ class BusinessController extends Controller
     }
 
     // Eliminar un negocio
-    public function destroy($id)
+    public function destroy(Request $request)
     {
         $user = Auth::user();
-        $business = Business::findOrFail($id);
-        // Solo el owner o admin puede eliminar el negocio
-        if (!$user->roles()->where('code', 'admin')->exists() && $business->owner_id !== $user->id) {
-            return response()->json(['error' => 'No autorizado'], 403);
+        // Solo admin puede eliminar negocios
+        if (!$this->isAdmin($user)) {
+            return response()->json(['message' => 'No autorizado'], 403);
         }
-        $business->delete();
-        return response()->json(['message' => 'Negocio eliminado']);
+        $ids = $request->input('ids');
+        $validator = Validator::make(['ids' => $ids], [
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], app('VALIDATION_STATUS'));
+        }
+        $deleted = DB::table('businesses')->whereIn('id', $ids)->delete();
+        return response()->json([
+                'success' => true,
+                'message' => "$deleted record(s) deleted."
+            ]
+        );
     }
 }

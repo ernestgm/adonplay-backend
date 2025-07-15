@@ -48,7 +48,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('businesses', 'store');
             Route::get('businesses/{id}', 'show');
             Route::put('businesses/{id}', 'update');
-            Route::delete('businesses/{id}', 'destroy');
+            Route::delete('businesses', 'destroy');
         });
         // Slide management routes
         Route::controller(SlideController::class)->group(function () {
