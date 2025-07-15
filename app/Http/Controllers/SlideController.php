@@ -55,15 +55,9 @@ class SlideController extends Controller
     }
 
     // Ver un slide específico
-    public function show($businessId, $id)
+    public function show($id)
     {
-        $user = Auth::user();
-        $business = Business::findOrFail($businessId);
-        // Solo el owner del business o admin puede ver el slide
-        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
-            return response()->json(['error' => 'No autorizado'], 403);
-        }
-        $slide = $business->slides()->findOrFail($id);
+        $slide = Slide::findOrFail($id);
         return response()->json($slide);
     }
 
@@ -78,7 +72,7 @@ class SlideController extends Controller
         if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
-        $slide = $business->slides()->findOrFail($id);
+        $slide = Slide::findOrFail($id);
         $slide->update($input);
         return response()->json($slide);
     }
