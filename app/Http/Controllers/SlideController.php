@@ -20,7 +20,23 @@ class SlideController extends Controller
         if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
-        return response()->json($business->slides);
+
+        $slides = $business->slides()->with('business.owner')->get();
+        return response()->json($slides);
+    }
+
+    public function all()
+    {
+        $user = Auth::user();
+        // Solo Slides del usuario autenticado
+        if (!$this->isAdmin($user)) {
+            $slides = Slide::whereHas('business', function ($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })->get();
+            return response()->json($slides);
+        }
+        // Si es admin, listar todos los slides
+        return response()->json(Slide::with('business.owner')->get());
     }
 
     // Crear slide en un business

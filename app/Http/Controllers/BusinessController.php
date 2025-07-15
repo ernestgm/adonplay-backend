@@ -18,10 +18,11 @@ class BusinessController extends Controller
         $user = Auth::user();
         // Solo negocios del usuario autenticado
         if (!$this->isAdmin($user)) {
-            $businesses = Business::where('owner_id', $user->id)->with('owner')->get();
+            $businesses = $user->businesses()->with('owner')->get();
             return response()->json($businesses);
         }
         // Si es admin, listar todos los negocios
+
         return response()->json(Business::with('owner')->get());
     }
 

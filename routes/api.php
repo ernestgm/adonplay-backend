@@ -53,10 +53,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Slide management routes
         Route::controller(SlideController::class)->group(function () {
             Route::get('businesses/{businessId}/slides', 'index');
-            Route::post('businesses/{businessId}/slides', 'store');
-            Route::get('businesses/{businessId}/slides/{id}', 'show');
-            Route::put('businesses/{businessId}/slides/{id}', 'update');
-            Route::delete('businesses/{businessId}/slides/{id}', 'destroy');
+            Route::get('/slides', 'all');
+            Route::post('/slides', 'store');
+            Route::get('/slides/{id}', 'show');
+            Route::put('/slides/{id}', 'update');
+            Route::delete('/slides', 'destroy');
         });
         // Media management routes
         Route::controller(MediaController::class)->group(function () {
