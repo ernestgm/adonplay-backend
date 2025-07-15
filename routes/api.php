@@ -44,8 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
         // Business management routes
         Route::controller(BusinessController::class)->group(function () {
-            Route::get('businesses', 'index'); // negocios del usuario
-            Route::get('businesses/all', 'all'); // todos los negocios (admin)
+            Route::get('businesses', 'index');
             Route::post('businesses', 'store');
             Route::get('businesses/{id}', 'show');
             Route::put('businesses/{id}', 'update');

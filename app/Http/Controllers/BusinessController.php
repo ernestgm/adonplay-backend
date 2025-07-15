@@ -15,16 +15,10 @@ class BusinessController extends Controller
     {
         $user = Auth::user();
         // Solo negocios del usuario autenticado
-        return response()->json($user->businesses);
-    }
-
-    // Listar todos los negocios (solo para administradores)
-    public function all()
-    {
-        $user = Auth::user();
         if (!$user->roles()->where('code', 'admin')->exists()) {
-            return response()->json(['error' => 'No autorizado'], 403);
+            return response()->json($user->businesses);
         }
+        // Si es admin, listar todos los negocios
         return response()->json(Business::all());
     }
 
