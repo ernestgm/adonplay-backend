@@ -40,15 +40,17 @@ class SlideController extends Controller
     }
 
     // Crear slide en un business
-    public function store(StoreSlideRequest $request, $businessId)
+    public function store(StoreSlideRequest $request)
     {
         $user = Auth::user();
-        $business = Business::findOrFail($businessId);
+        $request->validated();
+        $input = $request->all();
+        $business = Business::findOrFail($input['business_id']);
         // Solo el owner del business o admin puede crear slides
         if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
-        $slide = $business->slides()->create($request->validated());
+        $slide = $business->slides()->create($input);
         return response()->json($slide, 201);
     }
 
@@ -66,16 +68,18 @@ class SlideController extends Controller
     }
 
     // Actualizar un slide
-    public function update(UpdateSlideRequest $request, $businessId, $id)
+    public function update(UpdateSlideRequest $request, $id)
     {
         $user = Auth::user();
-        $business = Business::findOrFail($businessId);
+        $request->validated();
+        $input = $request->all();
+        $business = Business::findOrFail($input['business_id']);
         // Solo el owner del business o admin puede actualizar slides
         if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $slide = $business->slides()->findOrFail($id);
-        $slide->update($request->validated());
+        $slide->update($input);
         return response()->json($slide);
     }
 
