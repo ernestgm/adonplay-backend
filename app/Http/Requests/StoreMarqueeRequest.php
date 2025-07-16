@@ -20,6 +20,7 @@ class StoreMarqueeRequest extends FormRequest
             'background_color' => 'required|string|max:50',
             'text_color' => 'required|string|max:50',
             'message' => 'required|string',
+            'business_id' => 'required|exists:businesses,id',
         ];
     }
 
@@ -30,6 +31,7 @@ class StoreMarqueeRequest extends FormRequest
             'background_color.required' => 'El color de fondo es obligatorio.',
             'text_color.required' => 'El color de texto es obligatorio.',
             'message.required' => 'El mensaje es obligatorio.',
+            'business_id.required' => 'El Negocio es obligatorio.',
         ];
     }
 

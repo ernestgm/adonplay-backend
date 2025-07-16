@@ -10,21 +10,25 @@ use App\Http\Requests\UpdateMarqueeRequest;
 
 class MarqueeController extends Controller
 {
-    // Listar marquees del usuario autenticado o todos si es admin
-    public function index()
+    // Listar marquees del business o todos si es admin
+    public function index(Request $request)
     {
         $user = Auth::user();
         if ($this->isAdmin($user)) {
             return response()->json(Marquee::all());
         }
-        return response()->json($user->marquees);
+        $businessId = $request->get('business_id');
+        $business = $user->businesses()->findOrFail($businessId);
+        return response()->json($business->marquees);
     }
 
-    // Crear un nuevo marquee
+    // Crear un nuevo marquee para un business
     public function store(StoreMarqueeRequest $request)
     {
         $user = Auth::user();
-        $marquee = $user->marquees()->create($request->validated());
+        $businessId = $request->get('business_id');
+        $business = $user->businesses()->findOrFail($businessId);
+        $marquee = $business->marquees()->create($request->validated());
         return response()->json($marquee, 201);
     }
 
@@ -33,7 +37,7 @@ class MarqueeController extends Controller
     {
         $user = Auth::user();
         $marquee = Marquee::findOrFail($id);
-        if (!$this->isAdmin($user) && $marquee->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $marquee->business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         return response()->json($marquee);
@@ -44,7 +48,7 @@ class MarqueeController extends Controller
     {
         $user = Auth::user();
         $marquee = Marquee::findOrFail($id);
-        if (!$this->isAdmin($user) && $marquee->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $marquee->business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $marquee->update($request->validated());
@@ -56,7 +60,7 @@ class MarqueeController extends Controller
     {
         $user = Auth::user();
         $marquee = Marquee::findOrFail($id);
-        if (!$this->isAdmin($user) && $marquee->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $marquee->business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $marquee->delete();

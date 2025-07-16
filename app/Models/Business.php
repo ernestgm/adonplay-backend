@@ -24,4 +24,14 @@ class Business extends Model
     {
         return $this->hasMany(Slide::class);
     }
+
+    public function marquees()
+    {
+        return $this->hasMany(Marquee::class);
+    }
+
+    public function qrs()
+    {
+        return $this->hasMany(Qr::class);
+    }
 }

@@ -13,12 +13,12 @@ class Marquee extends Model
         'name',
         'background_color',
         'text_color',
-        'user_id',
+        'business_id',
         'message', // nuevo campo obligatorio
     ];
 
-    public function user()
+    public function business()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Business::class);
     }
 }

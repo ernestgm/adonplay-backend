@@ -64,22 +64,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Relación: Un usuario puede tener muchos Marquee
-     */
-    public function marquees()
-    {
-        return $this->hasMany(Marquee::class, 'owner_id');
-    }
-
-    /**
-     * Relación: Un usuario puede tener muchos Qrs
-     */
-    public function qrs()
-    {
-        return $this->hasMany(Qr::class);
-    }
-
-    /**
      * Relación: Un usuario puede tener un dispositivo (device)
      */
     public function device()

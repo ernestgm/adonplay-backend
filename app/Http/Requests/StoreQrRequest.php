@@ -19,6 +19,7 @@ class StoreQrRequest extends FormRequest
             'name' => 'required|string|max:255',
             'info' => 'required|string',
             'position' => 'nullable|string|max:100',
+            'business_id' => 'required|exists:businesses,id',
         ];
     }
 
@@ -27,6 +28,8 @@ class StoreQrRequest extends FormRequest
         return [
             'name.required' => 'El nombre es obligatorio.',
             'info.required' => 'El campo info es obligatorio.',
+            'business_id.required' => 'El campo business_id es obligatorio.',
+            'business_id.exists' => 'El campo business_id debe ser un ID de negocio válido.',
         ];
     }
 

@@ -13,11 +13,11 @@ class Qr extends Model
         'name',
         'info', // obligatorio
         'position',
-        'user_id',
+        'business_id',
     ];
 
-    public function user()
+    public function business()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Business::class);
     }
 }

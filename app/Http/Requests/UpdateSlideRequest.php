@@ -20,6 +20,7 @@ class UpdateSlideRequest extends FormRequest
             'description' => 'nullable|string',
             'description_position' => 'nullable|string',
             'description_size' => 'nullable|string',
+            'business_id' => 'required|integer|exists:businesses,id',
         ];
     }
     public function messages(): array
@@ -27,6 +28,7 @@ class UpdateSlideRequest extends FormRequest
         return [
             'name.string' => 'El nombre debe ser una cadena de texto.',
             'description.string' => 'La descripción debe ser una cadena de texto.',
+            'business_id.required' => 'El Negocio es obligatorio.',
             'description_position.string' => 'La posición de la descripción debe ser una cadena de texto.',
             'description_size.string' => 'El tamaño de la descripción debe ser una cadena de texto.',
         ];

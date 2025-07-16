@@ -20,6 +20,7 @@ class UpdateMarqueeRequest extends FormRequest
             'background_color' => 'sometimes|required|string|max:50',
             'text_color' => 'sometimes|required|string|max:50',
             'message' => 'sometimes|required|string',
+            'business_id' => 'required|exists:businesses,id',
         ];
     }
 
@@ -29,6 +30,8 @@ class UpdateMarqueeRequest extends FormRequest
             'name.required' => 'El nombre es obligatorio.',
             'background_color.required' => 'El color de fondo es obligatorio.',
             'text_color.required' => 'El color de texto es obligatorio.',
+            'business_id.required' => 'El Negocio es obligatorio.',
+            'message.required' => 'El mensaje es obligatorio.',
         ];
     }
 

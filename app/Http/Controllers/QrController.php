@@ -6,24 +6,29 @@ use App\Models\Qr;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreQrRequest;
 use App\Http\Requests\UpdateQrRequest;
+use Illuminate\Http\Request;
 
 class QrController extends Controller
 {
-    // Listar Qr del usuario autenticado o todos si es admin
-    public function index()
+    // Listar Qr del business o todos si es admin
+    public function index(Request $request)
     {
         $user = Auth::user();
         if ($this->isAdmin($user)) {
             return response()->json(Qr::all());
         }
-        return response()->json($user->qrs);
+        $businessId = $request->get('business_id');
+        $business = $user->businesses()->findOrFail($businessId);
+        return response()->json($business->qrs);
     }
 
-    // Crear un nuevo Qr
+    // Crear un nuevo Qr para un business
     public function store(StoreQrRequest $request)
     {
         $user = Auth::user();
-        $qr = $user->qrs()->create($request->validated());
+        $businessId = $request->get('business_id');
+        $business = $user->businesses()->findOrFail($businessId);
+        $qr = $business->qrs()->create($request->validated());
         return response()->json($qr, 201);
     }
 
@@ -32,7 +37,7 @@ class QrController extends Controller
     {
         $user = Auth::user();
         $qr = Qr::findOrFail($id);
-        if (!$this->isAdmin($user) && $qr->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $qr->business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         return response()->json($qr);
@@ -43,7 +48,7 @@ class QrController extends Controller
     {
         $user = Auth::user();
         $qr = Qr::findOrFail($id);
-        if (!$this->isAdmin($user) && $qr->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $qr->business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $qr->update($request->validated());
@@ -55,11 +60,10 @@ class QrController extends Controller
     {
         $user = Auth::user();
         $qr = Qr::findOrFail($id);
-        if (!$this->isAdmin($user) && $qr->user_id !== $user->id) {
+        if (!$this->isAdmin($user) && $qr->business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
         $qr->delete();
         return response()->json(['message' => 'QR eliminado']);
     }
 }
-
