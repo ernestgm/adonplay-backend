@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreSlideRequest;
 use App\Http\Requests\UpdateSlideRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class SlideController extends Controller
 {
@@ -77,17 +79,22 @@ class SlideController extends Controller
         return response()->json($slide);
     }
 
-    // Eliminar un slide
-    public function destroy($businessId, $id)
+    // Eliminar un marquee
+    public function destroy(Request $request)
     {
-        $user = Auth::user();
-        $business = Business::findOrFail($businessId);
-        // Solo el owner del business o admin puede eliminar slides
-        if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
-            return response()->json(['error' => 'No autorizado'], 403);
+        $ids = $request->input('ids');
+        $validator = Validator::make(['ids' => $ids], [
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], app('VALIDATION_STATUS'));
         }
-        $slide = $business->slides()->findOrFail($id);
-        $slide->delete();
-        return response()->json(['message' => 'Slide eliminado']);
+        $deleted = DB::table('slides')->whereIn('id', $ids)->delete();
+        return response()->json([
+                'success' => true,
+                'message' => "$deleted record(s) deleted."
+            ]
+        );
     }
 }

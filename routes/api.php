@@ -73,7 +73,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('marquees', 'store');
             Route::get('marquees/{id}', 'show');
             Route::put('marquees/{id}', 'update');
-            Route::delete('marquees/{id}', 'destroy');
+            Route::delete('marquees', 'destroy');
         });
         // Qr management routes
         Route::controller(\App\Http\Controllers\QrController::class)->group(function () {
