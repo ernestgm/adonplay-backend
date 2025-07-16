@@ -19,6 +19,7 @@ class UpdateMarqueeRequest extends FormRequest
             'name' => 'sometimes|required|string|max:255',
             'background_color' => 'sometimes|required|string|max:50',
             'text_color' => 'sometimes|required|string|max:50',
+            'message' => 'sometimes|required|string',
         ];
     }
 
@@ -41,4 +42,3 @@ class UpdateMarqueeRequest extends FormRequest
         ], 422));
     }
 }
-

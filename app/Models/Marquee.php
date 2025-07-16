@@ -14,6 +14,7 @@ class Marquee extends Model
         'background_color',
         'text_color',
         'user_id',
+        'message', // nuevo campo obligatorio
     ];
 
     public function user()
@@ -21,4 +22,3 @@ class Marquee extends Model
         return $this->belongsTo(User::class);
     }
 }
-

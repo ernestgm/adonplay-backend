@@ -19,6 +19,7 @@ class StoreMarqueeRequest extends FormRequest
             'name' => 'required|string|max:255',
             'background_color' => 'required|string|max:50',
             'text_color' => 'required|string|max:50',
+            'message' => 'required|string',
         ];
     }
 
@@ -28,6 +29,7 @@ class StoreMarqueeRequest extends FormRequest
             'name.required' => 'El nombre es obligatorio.',
             'background_color.required' => 'El color de fondo es obligatorio.',
             'text_color.required' => 'El color de texto es obligatorio.',
+            'message.required' => 'El mensaje es obligatorio.',
         ];
     }
 
@@ -41,4 +43,3 @@ class StoreMarqueeRequest extends FormRequest
         ], 422));
     }
 }
-
