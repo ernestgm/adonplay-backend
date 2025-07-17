@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Business;
 use App\Models\Qr;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreQrRequest;
@@ -15,11 +16,16 @@ class QrController extends Controller
     {
         $user = Auth::user();
         if ($this->isAdmin($user)) {
-            return response()->json(Qr::all());
+            return response()->json(Qr::with('business.owner')->get());
         }
         $businessId = $request->get('business_id');
         $business = $user->businesses()->findOrFail($businessId);
-        return response()->json($business->qrs);
+
+        $qrs = Qr::whereHas('business', function ($query) use ($user) {
+            $query->where('owner_id', $user->id);
+        })->with('business.owner')->get();
+
+        return response()->json($qrs);
     }
 
     // Crear un nuevo Qr para un business
@@ -27,7 +33,12 @@ class QrController extends Controller
     {
         $user = Auth::user();
         $businessId = $request->get('business_id');
-        $business = $user->businesses()->findOrFail($businessId);
+        if ($this->isAdmin($user)) {
+            $business = Business::findOrFail($businessId);
+        } else {
+            $business = $user->businesses()->findOrFail($businessId);
+        }
+
         $qr = $business->qrs()->create($request->validated());
         return response()->json($qr, 201);
     }
