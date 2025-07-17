@@ -17,8 +17,7 @@ class StoreMediaRequest extends FormRequest
     {
         return [
             'type' => 'required|in:image,video',
-            'file' => 'required|file',
-            'audio' => 'nullable|file|mimetypes:audio/mpeg,audio/mp3',
+            'file' => 'required',
             'description' => 'nullable|string',
             'description_position' => 'nullable|string',
             'description_size' => 'nullable|string',
@@ -28,23 +27,41 @@ class StoreMediaRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator)
+    public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if ($this->type === 'image') {
-                if (!$this->file('file')->isValid() || !in_array($this->file('file')->extension(), ['jpg','jpeg','png','gif','bmp','webp'])) {
-                    $validator->errors()->add('file', 'El archivo debe ser una imagen válida.');
+            $type = $this->input('type');
+
+            // Validar archivos principales
+            $files = $this->file('file', []);
+            foreach ($files as $file) {
+                if (!$file->isValid()) {
+                    $validator->errors()->add('file', 'Uno de los archivos no se pudo subir correctamente.');
+                    continue;
                 }
-                if ($this->hasFile('audio') && (!$this->file('audio')->isValid() || !in_array($this->file('audio')->extension(), ['mp3']))) {
-                    $validator->errors()->add('audio', 'El audio debe ser un archivo MP3 válido.');
+
+                if ($type === 'image' && !in_array($file->extension(), ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'])) {
+                    $validator->errors()->add('file', 'Uno de los archivos no es una imagen válida.');
                 }
-            } elseif ($this->type === 'video') {
-                if (!$this->file('file')->isValid() || !in_array($this->file('file')->extension(), ['mp4','avi','mov','mkv','webm'])) {
-                    $validator->errors()->add('file', 'El archivo debe ser un video válido.');
+
+                if ($type === 'video' && !in_array($file->extension(), ['mp4', 'avi', 'mov', 'mkv', 'webm'])) {
+                    $validator->errors()->add('file', 'Uno de los archivos no es un video válido.');
                 }
-                if ($this->hasFile('audio')) {
-                    $validator->errors()->add('audio', 'No se puede adjuntar audio a un video.');
+            }
+
+            // Validar archivos de audio (solo para imágenes)
+            if ($type === 'image') {
+                $audios = $this->file('audio', []);
+                foreach ($audios as $audio) {
+                    if (!$audio->isValid() || $audio->extension() !== 'mp3') {
+                        $validator->errors()->add('audio', 'Uno de los audios no es un archivo MP3 válido.');
+                    }
                 }
+            }
+
+            // Para tipo video: no debe haber audio
+            if ($type === 'video' && $this->hasFile('audio')) {
+                $validator->errors()->add('audio', 'No se puede adjuntar audio a un video.');
             }
         });
     }
@@ -55,9 +72,6 @@ class StoreMediaRequest extends FormRequest
             'type.required' => 'El tipo es obligatorio.',
             'type.in' => 'El tipo debe ser image o video.',
             'file.required' => 'El archivo es obligatorio.',
-            'file.file' => 'El archivo debe ser válido.',
-            'audio.file' => 'El audio debe ser un archivo válido.',
-            'audio.mimetypes' => 'El audio debe ser un archivo MP3.',
         ];
     }
 

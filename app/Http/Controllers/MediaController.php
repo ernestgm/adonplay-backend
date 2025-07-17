@@ -32,28 +32,46 @@ class MediaController extends Controller
         $user = Auth::user();
         $slide = Slide::findOrFail($slideId);
         $business = $slide->business;
+
         if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
+
         $type = $request->input('type');
-        $file = $request->file('file');
-        $audio = $request->file('audio');
+        $files = $request->file('file');   // Array de archivos
+        $audios = $request->file('audio'); // Puede ser null o array
+
         $userId = $business->owner_id;
         $folder = $type === 'image' ? 'images' : 'videos';
-        $fileName = $folder . '/' . $userId . '/' . $folder . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-        Storage::disk('ftp')->put($fileName, fopen($file, 'r+'));
-        $audioPath = null;
-        if ($type === 'image' && $audio) {
-            $audioName = 'audios/' . $userId . '/audios/' . Str::uuid() . '.' . $audio->getClientOriginalExtension();
-            Storage::disk('ftp')->put($audioName, fopen($audio, 'r+'));
-            $audioPath = $audioName;
+
+        $createdMedias = [];
+
+        foreach ($files as $index => $file) {
+            $fileName = "$folder/$userId/$folder/" . Str::uuid() . '.' . $file->getClientOriginalExtension();
+            //Storage::disk('ftp')->put($fileName, fopen($file, 'r+'));
+
+            $audioPath = null;
+            if ($type === 'image' && isset($audios[$index])) {
+                $audio = $audios[$index];
+                $audioName = "audios/$userId/audios/" . Str::uuid() . '.' . $audio->getClientOriginalExtension();
+                //Storage::disk('ftp')->put($audioName, fopen($audio, 'r+'));
+                $audioPath = $audioName;
+            }
+
+            $media = $slide->medias()->create([
+                'type' => $type,
+                'file_path' => $fileName,
+                'audio_path' => $audioPath,
+                'description_position' => $request->input('description_position'),
+                'description_size' => $request->input('description_size'),
+                'qr_position' => $request->input('qr_position'),
+                'duration' => $request->input('duration'),
+            ]);
+
+            $createdMedias[] = $media;
         }
-        $media = $slide->medias()->create([
-            'type' => $type,
-            'file_path' => $fileName,
-            'audio_path' => $audioPath,
-        ]);
-        return response()->json($media, 201);
+
+        return response()->json($createdMedias, 201);
     }
 
     // Ver media específica
