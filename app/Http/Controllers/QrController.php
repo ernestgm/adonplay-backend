@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreQrRequest;
 use App\Http\Requests\UpdateQrRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class QrController extends Controller
 {
@@ -66,15 +68,22 @@ class QrController extends Controller
         return response()->json($qr);
     }
 
-    // Eliminar un Qr
-    public function destroy($id)
+    // Eliminar un marquee
+    public function destroy(Request $request)
     {
-        $user = Auth::user();
-        $qr = Qr::findOrFail($id);
-        if (!$this->isAdmin($user) && $qr->business->owner_id !== $user->id) {
-            return response()->json(['error' => 'No autorizado'], 403);
+        $ids = $request->input('ids');
+        $validator = Validator::make(['ids' => $ids], [
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], app('VALIDATION_STATUS'));
         }
-        $qr->delete();
-        return response()->json(['message' => 'QR eliminado']);
+        $deleted = DB::table('qrs')->whereIn('id', $ids)->delete();
+        return response()->json([
+                'success' => true,
+                'message' => "$deleted record(s) deleted."
+            ]
+        );
     }
 }

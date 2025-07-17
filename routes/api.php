@@ -81,7 +81,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('qrs', 'store');
             Route::get('qrs/{id}', 'show');
             Route::put('qrs/{id}', 'update');
-            Route::delete('qrs/{id}', 'destroy');
+            Route::delete('qrs', 'destroy');
         });
         // Device management routes
         Route::controller(\App\Http\Controllers\DeviceController::class)->group(function () {
