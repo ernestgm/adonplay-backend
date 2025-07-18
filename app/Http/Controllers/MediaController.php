@@ -38,30 +38,25 @@ class MediaController extends Controller
         }
 
         $type = $request->input('type');
-        $files = $request->file('file');   // Array de archivos
-        $audios = $request->file('audio'); // Puede ser null o array
-
         $userId = $business->owner_id;
+        $rootFolder = env('FTP_ENV');
         $folder = $type === 'image' ? 'images' : 'videos';
 
         $createdMedias = [];
 
-        foreach ($files as $index => $file) {
-            $fileName = "$folder/$userId/$folder/" . Str::uuid() . '.' . $file->getClientOriginalExtension();
-            //Storage::disk('ftp')->put($fileName, fopen($file, 'r+'));
-
-            $audioPath = null;
-            if ($type === 'image' && isset($audios[$index])) {
-                $audio = $audios[$index];
-                $audioName = "audios/$userId/audios/" . Str::uuid() . '.' . $audio->getClientOriginalExtension();
-                //Storage::disk('ftp')->put($audioName, fopen($audio, 'r+'));
-                $audioPath = $audioName;
-            }
+        // Para videos, el archivo viene como un único archivo, no como array
+        if ($type === 'video') {
+            $file = $request->file('file');
+            $subfolder = "$rootFolder/$folder/user_$userId/$folder/";
+            $fileName = "$rootFolder/$folder/user_$userId/$folder/" . Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $this->getFileSystem()->makeDirectory($subfolder);
+            $this->uploadToFtp($fileName, $file);
+            $filePath = $fileName;
 
             $media = $slide->medias()->create([
                 'type' => $type,
-                'file_path' => $fileName,
-                'audio_path' => $audioPath,
+                'file_path' => $filePath,
+                'audio_path' => null, // Videos no tienen audio separado
                 'description_position' => $request->input('description_position'),
                 'description_size' => $request->input('description_size'),
                 'qr_position' => $request->input('qr_position'),
@@ -69,6 +64,40 @@ class MediaController extends Controller
             ]);
 
             $createdMedias[] = $media;
+        } else {
+            // Para imágenes, sigue procesando como array
+            $files = $request->file('file');   // Array de archivos
+            $audios = $request->file('audio'); // Puede ser null o array
+
+            foreach ($files as $index => $file) {
+                $subfolder = "$rootFolder/$folder/user_$userId/$folder/";
+                $fileName = "$rootFolder/$folder/user_$userId/$folder/" . Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $this->getFileSystem()->makeDirectory($subfolder);
+                $this->uploadToFtp($fileName, $file);
+                $filePath = $fileName;
+
+                $audioPath = null;
+                if (isset($audios[$index])) {
+                    $audio = $audios[$index];
+                    $audioSubfolder = "$rootFolder/audios/user_$userId/audios/";
+                    $audioName = "$rootFolder/audios/user_$userId/audios/" . Str::uuid() . '.' . $audio->getClientOriginalExtension();
+                    $this->getFileSystem()->makeDirectory($audioSubfolder);
+                    $this->uploadToFtp($fileName, $file);
+                    $audioPath = $audioName;
+                }
+
+                $media = $slide->medias()->create([
+                    'type' => $type,
+                    'file_path' => $filePath,
+                    'audio_path' => $audioPath,
+                    'description_position' => $request->input('description_position'),
+                    'description_size' => $request->input('description_size'),
+                    'qr_position' => $request->input('qr_position'),
+                    'duration' => $request->input('duration'),
+                ]);
+
+                $createdMedias[] = $media;
+            }
         }
 
         return response()->json($createdMedias, 201);

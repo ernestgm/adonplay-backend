@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 
 # Instalamos dependencias del sistema y extensiones necesarias
 RUN apt-get update && apt-get install -y \
@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     git \
+    libssl-dev \
     libzip-dev \
     libjpeg-dev \
     libpng-dev \
@@ -15,7 +16,10 @@ RUN apt-get update && apt-get install -y \
     libwebp-dev \
     libxpm-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm \
-    && docker-php-ext-install pdo_mysql mbstring zip gd ftp
+    && docker-php-ext-install pdo_mysql mbstring zip gd
+
+RUN docker-php-ext-configure ftp --with-ftp-ssl \
+    && docker-php-ext-install ftp
 
 # Instalar dependencias y mysql-client
 RUN apt-get update && apt-get install -y \

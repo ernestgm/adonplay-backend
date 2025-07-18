@@ -32,20 +32,26 @@ class StoreMediaRequest extends FormRequest
         $validator->after(function ($validator) {
             $type = $this->input('type');
 
-            // Validar archivos principales
-            $files = $this->file('file', []);
-            foreach ($files as $file) {
-                if (!$file->isValid()) {
-                    $validator->errors()->add('file', 'Uno de los archivos no se pudo subir correctamente.');
-                    continue;
+            // Para videos, el archivo viene como un único archivo, no como array
+            if ($type === 'video') {
+                $file = $this->file('file');
+                if (!$file || !$file->isValid()) {
+                    $validator->errors()->add('file', 'El archivo de video no se pudo subir correctamente.');
+                } elseif (!in_array($file->extension(), ['mp4', 'avi', 'mov', 'mkv', 'webm'])) {
+                    $validator->errors()->add('file', 'El archivo no es un video válido.');
                 }
+            } else {
+                // Para imágenes, sigue procesando como array
+                $files = $this->file('file', []);
+                foreach ($files as $file) {
+                    if (!$file->isValid()) {
+                        $validator->errors()->add('file', 'Uno de los archivos no se pudo subir correctamente.');
+                        continue;
+                    }
 
-                if ($type === 'image' && !in_array($file->extension(), ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'])) {
-                    $validator->errors()->add('file', 'Uno de los archivos no es una imagen válida.');
-                }
-
-                if ($type === 'video' && !in_array($file->extension(), ['mp4', 'avi', 'mov', 'mkv', 'webm'])) {
-                    $validator->errors()->add('file', 'Uno de los archivos no es un video válido.');
+                    if (!in_array($file->extension(), ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'])) {
+                        $validator->errors()->add('file', 'Uno de los archivos no es una imagen válida.');
+                    }
                 }
             }
 
