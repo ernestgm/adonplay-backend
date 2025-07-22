@@ -65,7 +65,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('slides/{slideId}/media', 'store');
             Route::get('slides/{slideId}/media/{id}', 'show');
             Route::post('slides/{slideId}/media/{id}', 'update');
-            Route::delete('slides/{slideId}/media/{id}', 'destroy');
+            Route::delete('slides/{slideId}/media', 'destroy');
         });
         // Marquee management routes
         Route::controller(\App\Http\Controllers\MarqueeController::class)->group(function () {

@@ -7,9 +7,11 @@ use App\Models\Slide;
 use App\Models\Business;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreMediaRequest;
 use App\Http\Requests\UpdateMediaRequest;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class MediaController extends Controller
@@ -72,8 +74,8 @@ class MediaController extends Controller
             foreach ($files as $index => $file) {
                 $subfolder = "$rootFolder/$folder/user_$userId/$folder/";
                 $fileName = "$rootFolder/$folder/user_$userId/$folder/" . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $this->getFileSystem()->makeDirectory($subfolder);
-                $this->uploadToFtp($fileName, $file);
+                $this->getFileSystem()->put($fileName, fopen($file, 'r+'));
+                //$this->uploadToFtp($fileName, $file);
                 $filePath = $fileName;
 
                 $audioPath = null;
@@ -81,7 +83,8 @@ class MediaController extends Controller
                     $audio = $audios[$index];
                     $audioSubfolder = "$rootFolder/audios/user_$userId/audios/";
                     $audioName = $audioSubfolder . Str::uuid() . '.' . $audio->getClientOriginalExtension();
-                    $this->getFileSystem()->makeDirectory($audioSubfolder);
+                    //$this->getFileSystem()->makeDirectory($audioSubfolder);
+                    $this->getFileSystem()->put($fileName, fopen($audio, 'r+'));
                     $this->uploadToFtp($fileName, $audio);
                     $audioPath = $audioName;
                 }
@@ -112,7 +115,7 @@ class MediaController extends Controller
         if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
-        $media = $slide->medias()->findOrFail($id);
+        $media = $slide->medias()->with('slide')->findOrFail($id);
         return response()->json($media);
     }
 
@@ -155,8 +158,7 @@ class MediaController extends Controller
         return response()->json($data);
     }
 
-    // Eliminar media
-    public function destroy($slideId, $id)
+    public function destroy(Request $request, $slideId)
     {
         $user = Auth::user();
         $slide = Slide::findOrFail($slideId);
@@ -164,15 +166,31 @@ class MediaController extends Controller
         if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
-        $media = $slide->medias()->findOrFail($id);
-        // Eliminar archivos del FTP
-        if ($media->file_path) {
-            Storage::disk('ftp')->delete($media->file_path);
+
+        $ids = $request->input('ids');
+        $validator = Validator::make(['ids' => $ids], [
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], app('VALIDATION_STATUS'));
         }
-        if ($media->audio_path) {
-            Storage::disk('ftp')->delete($media->audio_path);
+
+        $medias = $slide->medias()->whereIn('id', $ids)->get();
+        foreach ($medias as $media) {
+            if ($media->file_path) {
+                $this->getFileSystem()->delete($media->file_path);
+            }
+            if ($media->audio_path) {
+                $this->getFileSystem()->delete($media->audio_path);
+            }
         }
-        $media->delete();
-        return response()->json(['message' => 'Archivo multimedia eliminado']);
+
+        $deleted = DB::table('media')->whereIn('id', $ids)->delete();
+        return response()->json([
+                'success' => true,
+                'message' => "$deleted record(s) deleted."
+            ]
+        );
     }
 }
