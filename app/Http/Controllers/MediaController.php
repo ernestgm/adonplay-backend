@@ -80,9 +80,9 @@ class MediaController extends Controller
                 if (isset($audios[$index])) {
                     $audio = $audios[$index];
                     $audioSubfolder = "$rootFolder/audios/user_$userId/audios/";
-                    $audioName = "$rootFolder/audios/user_$userId/audios/" . Str::uuid() . '.' . $audio->getClientOriginalExtension();
+                    $audioName = $audioSubfolder . Str::uuid() . '.' . $audio->getClientOriginalExtension();
                     $this->getFileSystem()->makeDirectory($audioSubfolder);
-                    $this->uploadToFtp($fileName, $file);
+                    $this->uploadToFtp($fileName, $audio);
                     $audioPath = $audioName;
                 }
 
@@ -125,26 +125,34 @@ class MediaController extends Controller
         if (!$this->isAdmin($user) && $business->owner_id !== $user->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
+
         $media = $slide->medias()->findOrFail($id);
-        $data = $request->validated();
+        $data = $request->all();
+        $rootFolder = env('FTP_ENV');
+
         if ($request->hasFile('file')) {
             $type = $request->input('type', $media->type);
             $file = $request->file('file');
             $userId = $business->owner_id;
             $folder = $type === 'image' ? 'images' : 'videos';
-            $fileName = $folder . '/' . $userId . '/' . $folder . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-            Storage::disk('ftp')->put($fileName, fopen($file, 'r+'));
+            $subfolder = "$rootFolder/$folder/user_$userId/$folder/";
+            $fileName = $subfolder . Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $this->getFileSystem()->makeDirectory($subfolder);
+            $this->uploadToFtp($fileName, $file);
             $data['file_path'] = $fileName;
         }
+
         if ($request->hasFile('audio') && ($request->input('type', $media->type) === 'image')) {
             $audio = $request->file('audio');
             $userId = $business->owner_id;
-            $audioName = 'audios/' . $userId . '/audios/' . Str::uuid() . '.' . $audio->getClientOriginalExtension();
-            Storage::disk('ftp')->put($audioName, fopen($audio, 'r+'));
+            $audioSubfolder = "$rootFolder/audios/user_$userId/audios/";
+            $audioName = $audioSubfolder . Str::uuid() . '.' . $audio->getClientOriginalExtension();
+            $this->getFileSystem()->makeDirectory($audioSubfolder);
+            $this->uploadToFtp($audioName, $audio);
             $data['audio_path'] = $audioName;
         }
         $media->update($data);
-        return response()->json($media);
+        return response()->json($data);
     }
 
     // Eliminar media
