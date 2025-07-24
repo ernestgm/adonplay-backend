@@ -74,8 +74,9 @@ class MediaController extends Controller
             foreach ($files as $index => $file) {
                 $subfolder = "$rootFolder/$folder/user_$userId/$folder/";
                 $fileName = "$rootFolder/$folder/user_$userId/$folder/" . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $this->getFileSystem()->put($fileName, fopen($file, 'r+'));
-                //$this->uploadToFtp($fileName, $file);
+                //$this->getFileSystem()->put($fileName, fopen($file, 'r+'));
+                $this->getFileSystem()->makeDirectory($subfolder);
+                $this->uploadToFtp($fileName, $file);
                 $filePath = $fileName;
 
                 $audioPath = null;
@@ -83,8 +84,8 @@ class MediaController extends Controller
                     $audio = $audios[$index];
                     $audioSubfolder = "$rootFolder/audios/user_$userId/audios/";
                     $audioName = $audioSubfolder . Str::uuid() . '.' . $audio->getClientOriginalExtension();
-                    //$this->getFileSystem()->makeDirectory($audioSubfolder);
-                    $this->getFileSystem()->put($fileName, fopen($audio, 'r+'));
+                    $this->getFileSystem()->makeDirectory($audioSubfolder);
+                    //$this->getFileSystem()->put($fileName, fopen($audio, 'r+'));
                     $this->uploadToFtp($fileName, $audio);
                     $audioPath = $audioName;
                 }
